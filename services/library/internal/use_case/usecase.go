@@ -8,7 +8,7 @@ import (
 
 type BookUseCase interface {
 	CreateBook(ctx context.Context, author, name string, year, invnom, nombil int) error
-	FindBooks(ctx context.Context, author, name string, year, invnom, nombil int) (*[]book.Book, error)
+	FindBooks(ctx context.Context, author, name string, year, invnom, nombil int) ([]*book.Book, error)
 }
 
 type ReaderUseCase interface {
