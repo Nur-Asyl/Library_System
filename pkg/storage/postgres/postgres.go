@@ -3,6 +3,7 @@ package postgres
 import (
 	"database/sql"
 	"fmt"
+	_ "github.com/lib/pq"
 	"log/slog"
 	"my_library/services/library/configs"
 	"sync"
