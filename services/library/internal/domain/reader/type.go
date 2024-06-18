@@ -3,9 +3,9 @@ package reader
 import "errors"
 
 type Reader struct {
-	fio     string
-	address string
-	nombil  int
+	FIO     string
+	Address string
+	NOMBIL  int
 }
 
 func NewReader(fio, address string, nombil int) (*Reader, error) {
@@ -17,9 +17,9 @@ func NewReader(fio, address string, nombil int) (*Reader, error) {
 	}
 
 	return &Reader{
-		fio:     fio,
-		address: address,
-		nombil:  nombil,
+		FIO:     fio,
+		Address: address,
+		NOMBIL:  nombil,
 	}, nil
 }
 

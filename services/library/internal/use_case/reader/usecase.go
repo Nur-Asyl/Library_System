@@ -44,7 +44,7 @@ func (uc ReaderUseCase) FindReaderByNOMBIL(ctx context.Context, nombil int) (*re
 
 func (uc ReaderUseCase) AcceptBook(ctx context.Context, nombil int) error {
 	if err := uc.readerRepo.AcceptBook(ctx, nombil); err != nil {
-		slog.Error("Failed to accept bookRepo in db")
+		slog.Error("Failed to accept book in db")
 		return err
 	}
 
@@ -54,7 +54,7 @@ func (uc ReaderUseCase) AcceptBook(ctx context.Context, nombil int) error {
 func (uc ReaderUseCase) AssignBook(ctx context.Context, author, name string, year, invnom, nombil int) error {
 	book, err := book.NewBook(author, name, year, invnom, nombil)
 	if err != nil {
-		slog.Error("Failed to construct bookRepo")
+		slog.Error("Failed to construct book")
 		return err
 	}
 
