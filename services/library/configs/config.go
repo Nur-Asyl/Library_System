@@ -12,7 +12,7 @@ type Config struct {
 }
 
 func NewConfig() (*Config, error) {
-	viper.SetConfigFile("services/library/configs/config.yaml")
+	viper.SetConfigFile("configs/config.yaml")
 	if err := viper.ReadInConfig(); err != nil {
 		return nil, err
 	}
