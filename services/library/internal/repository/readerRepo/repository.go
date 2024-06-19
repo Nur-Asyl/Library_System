@@ -4,8 +4,9 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"my_library/services/library/internal/domain/book"
+	"log/slog"
 	"my_library/services/library/internal/domain/reader"
+	"time"
 )
 
 type ReaderRepo struct {
@@ -26,7 +27,7 @@ func (r ReaderRepo) CreateReader(ctx context.Context, reader *reader.Reader) err
 }
 
 func (r ReaderRepo) FindReaderByNOMBIL(ctx context.Context, nombil int) (*reader.Reader, error) {
-	var reader *reader.Reader
+	var reader reader.Reader
 	err := r.db.QueryRowContext(ctx, "SELECT fio, address, nombil FROM readers WHERE nombil=$1", nombil).Scan(&reader.FIO, &reader.Address, &reader.NOMBIL)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -35,23 +36,84 @@ func (r ReaderRepo) FindReaderByNOMBIL(ctx context.Context, nombil int) (*reader
 		return nil, err
 	}
 
-	return reader, nil
+	return &reader, nil
 }
 
-func (r ReaderRepo) AcceptBook(ctx context.Context, nombil int) error {
-	row := r.db.QueryRowContext(ctx, "SELECT author, name, year, invnom FROM books WHERE nombil=$1", nombil)
-	if row.Err() != nil {
-		return row.Err()
+func (r ReaderRepo) AcceptBook(ctx context.Context, name string, reader_nombil int) error {
+	tx, err := r.db.Begin()
+	if err != nil {
+		return err
 	}
+
+	stmt := "UPDATE books SET nombil=NULL, date=NULL WHERE name=$1 AND nombil=$2"
+
+	accepted, err := tx.PrepareContext(ctx, stmt)
+	if err != nil {
+		return err
+	}
+
+	res, err := accepted.ExecContext(ctx, name, reader_nombil)
+	if err != nil {
+		return err
+	}
+
+	if err = accepted.Close(); err != nil {
+		return err
+	}
+
+	if err = tx.Commit(); err != nil {
+		return err
+	}
+
+	affected, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if affected == 0 {
+		return errors.New("No such book or incorrect reader's nombil")
+	}
+	slog.Info("Records affected:", affected)
 
 	return nil
 }
 
-func (r ReaderRepo) AssignBook(ctx context.Context, book *book.Book) error {
-	row := r.db.QueryRowContext(ctx, "SELECT fio, address, nombil FROM readers WHERE nombil=$1", book.NOMBIL)
-	if row.Err() != nil {
-		return row.Err()
+func (r ReaderRepo) AssignBook(ctx context.Context, name string, reader_nombil int) error {
+
+	tx, err := r.db.Begin()
+	if err != nil {
+		return err
 	}
+
+	stmt := "UPDATE books SET nombil=$1, date=$2 WHERE name=$3 AND nombil IS NULL"
+
+	assign, err := tx.PrepareContext(ctx, stmt)
+	if err != nil {
+		return err
+	}
+
+	res, err := assign.ExecContext(ctx, reader_nombil, time.Now(), name)
+	if err != nil {
+		return err
+	}
+
+	assign.Close()
+
+	err = tx.Commit()
+	if err != nil {
+		return err
+	}
+
+	affected, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if affected == 0 {
+		return errors.New("No such book or incorrect reader's nombil")
+	}
+
+	slog.Info("Records affected:", affected)
 
 	return nil
 }

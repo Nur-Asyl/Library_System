@@ -9,12 +9,12 @@ type Book struct {
 	Author string
 	Name   string
 	Year   int
+	Date   *time.Time
 	INVNOM int
-	Date   time.Time
-	NOMBIL int
+	NOMBIL *int
 }
 
-func NewBook(author, name string, year, invnom, nombil int) (*Book, error) {
+func NewBook(author, name string, year, invnom int) (*Book, error) {
 	if err := checkAuthor(author); err != nil {
 		return nil, err
 	}
@@ -27,7 +27,6 @@ func NewBook(author, name string, year, invnom, nombil int) (*Book, error) {
 		Name:   name,
 		Year:   year,
 		INVNOM: invnom,
-		NOMBIL: nombil,
 	}, nil
 }
 

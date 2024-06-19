@@ -25,57 +25,75 @@ func (r BookRepo) CreateBook(ctx context.Context, book *book.Book) error {
 	return nil
 }
 
-func (r BookRepo) FindBooks(ctx context.Context, b *book.Book) ([]*book.Book, error) {
-	params := make([]any, 4)
+func (r BookRepo) FindBooks(ctx context.Context, author, name string, year, invnom, nombil int) ([]book.Book, error) {
+	var params []interface{}
 	count := 1
 
-	query := "SELECT author, name, year, invnom from books WHERE" + " "
+	query := "SELECT author, name, year, date, invnom, nombil FROM books WHERE" + " "
 
-	if b.Author != "" {
-		query += "author = $" + strconv.Itoa(count) + " "
-		count++
-		params = append(params, b.Author)
+	addAND := func() {
+		if count > 1 {
+			query += " AND "
+		}
 	}
 
-	if b.Name != "" {
-		query += "name = $" + strconv.Itoa(count) + " "
+	if author != "" {
+		addAND()
+		query += "author = $" + strconv.Itoa(count)
 		count++
-		params = append(params, b.Name)
+		params = append(params, author)
 	}
 
-	if b.Year != 0 {
-		query += "year = $" + strconv.Itoa(count) + " "
+	if name != "" {
+		addAND()
+		query += "name = $" + strconv.Itoa(count)
 		count++
-		params = append(params, b.Year)
+		params = append(params, name)
 	}
 
-	if b.INVNOM != 0 {
-		query += "invnom = $" + strconv.Itoa(count) + " "
+	if year != 0 {
+		addAND()
+		query += "year = $" + strconv.Itoa(count)
 		count++
-		params = append(params, b.INVNOM)
+		params = append(params, year)
 	}
 
-	rows, err := r.db.QueryContext(ctx, query, params)
-	defer rows.Close()
+	if invnom != 0 {
+		addAND()
+		query += "invnom = $" + strconv.Itoa(count)
+		count++
+		params = append(params, invnom)
+	}
+
+	if nombil != 0 {
+		addAND()
+		query += "nombil = $" + strconv.Itoa(count)
+		count++
+		params = append(params, nombil)
+	}
+
+	rows, err := r.db.QueryContext(ctx, query, params...)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, errors.New("Books not found")
 		}
 		return nil, err
 	}
+	defer rows.Close()
 
-	var books []*book.Book
+	var books []book.Book
 
 	for rows.Next() {
-		err := rows.Scan(&b.Author, &b.Name, &b.Year, &b.INVNOM, &b.Date, &b.NOMBIL)
+		var newBook book.Book
+		err := rows.Scan(&newBook.Author, &newBook.Name, &newBook.Year, &newBook.Date, &newBook.INVNOM, &newBook.NOMBIL)
 		if err != nil {
 			return nil, err
 		}
-		books = append(books, b)
+		books = append(books, newBook)
 	}
 
-	if rows.Err() != nil {
-		return nil, err
+	if len(books) == 0 {
+		return nil, errors.New("Books not found")
 	}
 
 	return books, nil

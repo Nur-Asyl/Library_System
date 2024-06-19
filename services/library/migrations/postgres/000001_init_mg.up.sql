@@ -6,12 +6,12 @@ CREATE TABLE readers (
 );
 
 CREATE TABLE books (
-    id INT PRIMARY KEY,
     author VARCHAR(40),
-    name VARCHAR(50),
+    name VARCHAR(50) PRIMARY KEY,
     year INT,
+    date TIMESTAMP,
     invnom INT,
     nombil INT
 );
 
-ALTER TABLE books ADD FOREIGN KEY (nombil) REFERENCES readers (nombil);
+ALTER TABLE books ADD FOREIGN KEY (nombil) REFERENCES readers (nombil) ON UPDATE SET NULL;

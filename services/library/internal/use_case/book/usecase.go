@@ -17,8 +17,8 @@ func NewBookUseCase(bookRepo storage.BookRepo) *BookUseCase {
 	}
 }
 
-func (uc BookUseCase) CreateBook(ctx context.Context, author, name string, year, invnom, nombil int) error {
-	newBook, err := book.NewBook(author, name, year, invnom, nombil)
+func (uc BookUseCase) CreateBook(ctx context.Context, author, name string, year, invnom int) error {
+	newBook, err := book.NewBook(author, name, year, invnom)
 	if err != nil {
 		slog.Error("Failed to construct book instance for creation")
 		return err
@@ -33,14 +33,14 @@ func (uc BookUseCase) CreateBook(ctx context.Context, author, name string, year,
 	return nil
 }
 
-func (uc BookUseCase) FindBooks(ctx context.Context, author, name string, year, invnom, nombil int) ([]*book.Book, error) {
-	book, err := book.NewBook(author, name, year, invnom, nombil)
+func (uc BookUseCase) FindBooks(ctx context.Context, author, name string, year, invnom, nombil int) ([]book.Book, error) {
+	_, err := book.NewBook(author, name, year, invnom)
 	if err != nil {
 		slog.Error("Failed to construct book instance for search")
 		return nil, err
 	}
 
-	books, err := uc.bookRepo.FindBooks(ctx, book)
+	books, err := uc.bookRepo.FindBooks(ctx, author, name, year, invnom, nombil)
 	if err != nil {
 		slog.Error("Failed to find books in db")
 		return nil, err
